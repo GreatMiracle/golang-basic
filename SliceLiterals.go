@@ -14,7 +14,7 @@ func main() {
 	//var a [10]int
 	a := [10]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	// Cắt slice với các giới hạn mặc định
-	slice1 := a[:5] // Lấy 5 phần tử đầu tiên
+	slice1 := a[:3] // Lấy 5 phần tử đầu tiên
 	slice2 := a[5:] // Lấy phần tử từ vị trí 5 đến hết
 	slice3 := a[:]  // Lấy toàn bộ mảng
 
