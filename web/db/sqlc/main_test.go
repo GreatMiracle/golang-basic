@@ -2,13 +2,10 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"github.com/jackc/pgx/v5"
 	"log"
 	"os"
 	"testing"
-
-	_ "github.com/lib/pq"
 )
 
 const (
@@ -17,7 +14,7 @@ const (
 )
 
 var testQueries *Queries
-var testDB *sql.DB
+var testDB *pgx.Conn
 
 //func TestMain(m *testing.M) {
 //
@@ -31,15 +28,28 @@ var testDB *sql.DB
 //	os.Exit(m.Run())
 //}
 
+//func TestMain(m *testing.M) {
+//	// Mở kết nối DB bằng pgx
+//	conn, err := pgx.Connect(context.Background(), dbSource)
+//	if err != nil {
+//		log.Fatal("cannot connect to db:", err)
+//	}
+//	defer conn.Close(context.Background())
+//
+//	// Truyền kết nối vào trong Queries
+//	testQueries = New(conn)
+//	os.Exit(m.Run())
+//}
+
 func TestMain(m *testing.M) {
-	// Mở kết nối DB bằng pgx
-	conn, err := pgx.Connect(context.Background(), dbSource)
+	var err error
+	// Mở kết nối DB bằng pgxpool
+	testDB, err = pgx.Connect(context.Background(), dbSource) // Sử dụng pgxpool
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
-	defer conn.Close(context.Background())
 
 	// Truyền kết nối vào trong Queries
-	testQueries = New(conn)
+	testQueries = New(testDB) // testDB thực hiện đúng giao diện DBTX
 	os.Exit(m.Run())
 }

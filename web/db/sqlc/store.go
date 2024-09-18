@@ -3,15 +3,16 @@ package db
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 )
 
 type Store struct {
-	db      DBTX
-	Queries *Queries
+	*Queries
+	db *pgx.Conn
 }
 
 // NewStore creates a new Store instance
-func NewStore(db DBTX) *Store {
+func NewStore(db *pgx.Conn) *Store {
 	return &Store{
 		db:      db,
 		Queries: New(db), // Initialize Queries
