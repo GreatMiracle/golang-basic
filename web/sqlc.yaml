@@ -1,0 +1,40 @@
+version: "2"
+sql:
+  - schema: "db/migration"
+    queries: "db/query"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "db"
+        out: "db/sqlc"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: false
+        emit_empty_slices: false
+        emit_prepared_queries: false
+#        emit_extract_table_names: false
+        overrides:
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+
+
+#Giải thích file cấu hình:
+#version: "2": Phiên bản cấu hình sqlc bạn đang sử dụng.
+#sql: Mảng chứa các đường dẫn và cài đặt cho schema và query.
+#schema: Đường dẫn chứa các file schema (các lệnh SQL tạo bảng, v.v.).
+#queries: Đường dẫn chứa các file SQL truy vấn.
+#engine: Chỉ định cơ sở dữ liệu đang sử dụng là PostgreSQL.
+#gen: Các cài đặt liên quan đến việc sinh code.
+#go: Cài đặt sinh code cho Go.
+#package: Tên package Go mà sqlc sẽ tạo.
+#out: Đường dẫn thư mục đầu ra.
+#sql_package: Package Go dùng để kết nối với PostgreSQL (pgx/v5).
+#emit_json_tags: Thêm tag JSON vào các struct Go.
+#emit_interface: Không sinh interface.
+#emit_empty_slices: Không sinh slice rỗng.
+#emit_prepared_queries: Không sử dụng prepared statements.
+#overrides: Ghi đè kiểu dữ liệu giữa Go và PostgreSQL.
+#db_type: "timestamptz" ghi đè kiểu dữ liệu PostgreSQL timestamptz thành time.Time trong Go.
+#db_type: "uuid" ghi đè kiểu dữ liệu uuid thành github.com/google/uuid.UUID trong Go.
