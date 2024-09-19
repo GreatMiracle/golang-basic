@@ -12,7 +12,7 @@ WHERE id = $1
 -- name: ListAccounts :many
 SELECT *
 FROM accounts
-WHERE owner = $1
+WHERE ($1 = '' OR owner like $1)
 ORDER BY id LIMIT $2
 OFFSET $3;
 
