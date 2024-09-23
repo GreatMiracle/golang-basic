@@ -31,6 +31,9 @@ func NewServer(store *db.Store) *Server {
 	//transfer
 	router.POST("/transfer", server.createTransfer)
 
+	//user
+	router.POST("/user", server.createUser)
+
 	server.router = router
 
 	return server
@@ -38,6 +41,10 @@ func NewServer(store *db.Store) *Server {
 
 func errorResponse(err error) gin.H {
 	return gin.H{"error": err.Error()}
+}
+
+func errorResponseStr(msg string) gin.H {
+	return gin.H{"error": msg}
 }
 
 func (server *Server) Start(address string) error {
