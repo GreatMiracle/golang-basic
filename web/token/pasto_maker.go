@@ -46,6 +46,7 @@ func (maker *PasetoMaker) VerifyToken(token string) (*Payload, error) {
 		return nil, err
 	}
 
+	// Kiểm tra thời gian hết hạn
 	if err := payload.Valid(); err != nil {
 		return nil, err
 	}

@@ -18,5 +18,5 @@ func HashPassword(password string) (string, error) {
 
 // CheckPassword kiểm tra xem mật khẩu có khớp với mật khẩu băm không
 func CheckPassword(pwd string, hashedPwd string) error {
-	return bcrypt.CompareHashAndPassword([]byte(pwd), []byte(hashedPwd))
+	return bcrypt.CompareHashAndPassword([]byte(hashedPwd), []byte(pwd))
 }

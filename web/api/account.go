@@ -1,9 +1,11 @@
 package api
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	db "simpleBank/db/sqlc"
+	"simpleBank/token"
 	"strconv"
 )
 
@@ -47,6 +49,14 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	payload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if payload.Username != account.Owner {
+		err = errors.New("account doesn't belong to the authentication user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, account)
 }
 

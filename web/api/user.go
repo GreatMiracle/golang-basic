@@ -105,3 +105,55 @@ Giải thích:
 Nếu mã lỗi là unique_violation, điều này có nghĩa là bạn đang cố gắng chèn một bản ghi mà vi phạm ràng buộc duy nhất
 (ví dụ: username hoặc email đã tồn tại trong cơ sở dữ liệu).
 Trong trường hợp này, phản hồi trả về cho client sẽ có mã trạng thái HTTP 403 (Forbidden) cùng với thông tin lỗi.*/
+
+type userLoginRequest struct {
+	Username string `json:"username" binding:"required,alphanum"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+type userLoginResponse struct {
+	AccessToken string       `json:"accessToken"`
+	User        userResponse `json:"user"`
+}
+
+func (server *Server) loginUser(ctx *gin.Context) {
+	req := userLoginRequest{}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	user, err := server.store.GetUser(ctx, req.Username)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+		} else {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		}
+		return
+	}
+
+	if err := util.CheckPassword(req.Password, user.HashedPassword); err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	token, err := server.tokenMaker.CreateToken(user.Username, server.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	response := userLoginResponse{
+		AccessToken: token,
+		User: userResponse{
+			Username:  user.Username,
+			FullName:  user.FullName,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+		},
+	}
+
+	ctx.JSON(http.StatusOK, response)
+
+}

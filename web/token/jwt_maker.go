@@ -14,7 +14,7 @@ type JWTMaker struct {
 	secretKey string
 }
 
-func NewJWTMakerFromEnv(secretKey string) (*JWTMaker, error) {
+func NewJWTMaker(secretKey string) (*JWTMaker, error) {
 	if len(secretKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid secret key size: must be at least 32 characters")
 	}
@@ -78,6 +78,25 @@ func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	err = json.Unmarshal(marshal, &myPayload)
 	if err != nil {
 		return nil, err
+	}
+
+	// Kiểm tra thời gian hết hạn
+	if claims["expired_at"] != nil {
+		expirationTime, ok := claims["expired_at"].(string)
+		if !ok {
+			return nil, ErrInvalidToken
+		}
+
+		// Chuyển đổi string sang time.Time
+		expiredAtTime, err := time.Parse(time.RFC3339, expirationTime)
+		if err != nil {
+			return nil, ErrInvalidToken
+		}
+
+		// So sánh thời gian hiện tại với thời gian hết hạn
+		if time.Now().After(expiredAtTime) {
+			return nil, ErrExpiredToken
+		}
 	}
 
 	return myPayload, err

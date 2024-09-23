@@ -1,42 +1,70 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	db "simpleBank/db/sqlc"
+	"simpleBank/token"
+	"simpleBank/util"
 )
 
 type Server struct {
+	config     util.Config
+	tokenMaker token.TokenMaker
+
 	store  *db.Store
 	router *gin.Engine
 }
 
-func NewServer(store *db.Store) *Server {
-	server := &Server{store: store}
+func NewServer(config util.Config, store *db.Store) (*Server, error) {
+
+	//maker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	maker, err := token.NewJWTMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
+	}
+
+	server := &Server{
+		store:      store,
+		config:     config,
+		tokenMaker: maker,
+	}
 	router := gin.Default()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		err := v.RegisterValidation("valid_currency", validCurrency)
 		if err != nil {
-			return nil
+			return nil, nil
 		}
 	}
 
 	//account
-	router.POST("/account", server.createAccount)
-	router.GET("/account/:id", server.getAccount)
-	router.GET("/account", server.getListAccount)
+	server.setupRouter(router)
 
-	//transfer
-	router.POST("/transfer", server.createTransfer)
+	return server, nil
+}
+
+func (server *Server) setupRouter(router *gin.Engine) {
+
+	//login
+	router.POST("/login", server.loginUser)
+
+	authRouters := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
 	//user
-	router.POST("/user", server.createUser)
+	authRouters.POST("/user", server.createUser)
+
+	//account
+	authRouters.POST("/account", server.createAccount)
+	authRouters.GET("/account/:id", server.getAccount)
+	authRouters.GET("/account", server.getListAccount)
+
+	//transfer
+	authRouters.POST("/transfer", server.createTransfer)
 
 	server.router = router
-
-	return server
 }
 
 func errorResponse(err error) gin.H {
